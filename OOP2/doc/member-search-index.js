@@ -1,1 +1,0 @@
-memberSearchIndex = [{"p":"<Unnamed>","c":"DocuTest1","l":"berechne(int, int)","u":"berechne(int,int)"},{"p":"<Unnamed>","c":"DocuTest1","l":"DocuTest1()","u":"%3Cinit%3E()"},{"p":"<Unnamed>","c":"DocuTest1","l":"x"}];updateSearchResults();
