@@ -1,0 +1,439 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.net.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class Tictactoe extends JFrame {
+    private static final int BOARD_SIZE = 3;
+    private JButton[][] buttons = new JButton[BOARD_SIZE][BOARD_SIZE];
+    private char currentPlayer = 'X';
+    private char myPlayer;
+
+    // GUI-Komponenten
+    private JLabel statusLabel;
+    private JButton resetButton;
+    private JButton connectButton;
+    private JTextField ipAddressField;
+    private JTextField portField;
+
+    // Netzwerk-Komponenten
+    private ServerSocket serverSocket;
+    private Socket clientSocket;
+    private PrintWriter out;
+    private BufferedReader in;
+    private ExecutorService executorService;
+    private boolean isConnected = false;
+    private boolean isServer = false;
+
+    // Spielstatus
+    private boolean gameActive = true;
+    private boolean myTurn = false;
+
+    public Tictactoe() {
+        setTitle("Tic Tac Toe - Netzwerk-Multiplayer");
+        setSize(400, 500);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+        executorService = Executors.newCachedThreadPool();
+
+        // Spielbrett initialisieren
+        JPanel boardPanel = new JPanel(new GridLayout(BOARD_SIZE, BOARD_SIZE));
+        initializeBoard(boardPanel);
+        add(boardPanel, BorderLayout.CENTER);
+
+        // Status-Panel mit Anzeige des aktuellen Spielers
+        JPanel statusPanel = new JPanel();
+        statusLabel = new JLabel("Nicht verbunden. Starte einen Server oder verbinde mit einem Spiel.");
+        statusLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        statusPanel.add(statusLabel);
+        add(statusPanel, BorderLayout.NORTH);
+
+        // Netzwerk-Panel
+        JPanel networkPanel = new JPanel(new GridLayout(3, 1));
+
+        // IP und Port Panel
+        JPanel connectionPanel = new JPanel(new FlowLayout());
+        connectionPanel.add(new JLabel("IP-Adresse:"));
+        ipAddressField = new JTextField(getLocalIPAddress(), 12);
+        connectionPanel.add(ipAddressField);
+        connectionPanel.add(new JLabel("Port:"));
+        portField = new JTextField("5555", 5);
+        connectionPanel.add(portField);
+
+        // Buttons für Verbindung
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+
+        JButton hostButton = new JButton("Server starten");
+        hostButton.addActionListener(e -> startServer());
+
+        connectButton = new JButton("Mit Server verbinden");
+        connectButton.addActionListener(e -> connectToServer());
+
+        resetButton = new JButton("Spiel zurücksetzen");
+        resetButton.setEnabled(false);
+        resetButton.addActionListener(e -> {
+            if (isServer) {
+                resetBoard();
+                sendResetCommand();
+            }
+        });
+
+        buttonPanel.add(hostButton);
+        buttonPanel.add(connectButton);
+        buttonPanel.add(resetButton);
+
+        networkPanel.add(connectionPanel);
+        networkPanel.add(buttonPanel);
+
+        // Status-Info Panel
+        JPanel infoPanel = new JPanel();
+        JLabel infoLabel = new JLabel("Status: Nicht verbunden");
+        infoPanel.add(infoLabel);
+        networkPanel.add(infoPanel);
+
+        add(networkPanel, BorderLayout.SOUTH);
+
+        setLocationRelativeTo(null);
+
+        // Bei Schließen des Fensters Verbindungen schließen
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                closeConnections();
+            }
+        });
+    }
+
+    private String getLocalIPAddress() {
+        try {
+            return InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException e) {
+            return "127.0.0.1";
+        }
+    }
+
+    private void startServer() {
+        executorService.submit(() -> {
+            try {
+                int port = Integer.parseInt(portField.getText());
+                serverSocket = new ServerSocket(port);
+
+                SwingUtilities.invokeLater(() -> {
+                    statusLabel.setText("Server gestartet auf Port " + port + ". Warte auf Verbindung...");
+                    isServer = true;
+                    myPlayer = 'X';  // Server spielt X
+                    myTurn = true;   // Server beginnt
+                    connectButton.setEnabled(false);
+                });
+
+                // Warte auf Client-Verbindung
+                clientSocket = serverSocket.accept();
+                isConnected = true;
+
+                // Streams einrichten
+                out = new PrintWriter(clientSocket.getOutputStream(), true);
+                in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+                SwingUtilities.invokeLater(() -> {
+                    statusLabel.setText("Spieler verbunden! Du bist X. Du beginnst.");
+                    resetButton.setEnabled(true);
+                    resetBoard();
+                });
+
+                // Nachrichten vom Client empfangen
+                receiveMessages();
+
+            } catch (IOException e) {
+                SwingUtilities.invokeLater(() ->
+                        statusLabel.setText("Fehler beim Starten des Servers: " + e.getMessage()));
+            }
+        });
+    }
+
+    private void connectToServer() {
+        executorService.submit(() -> {
+            try {
+                String host = ipAddressField.getText();
+                int port = Integer.parseInt(portField.getText());
+
+                SwingUtilities.invokeLater(() ->
+                        statusLabel.setText("Verbinde mit " + host + ":" + port + "..."));
+
+                // Mit Server verbinden
+                clientSocket = new Socket(host, port);
+                isConnected = true;
+
+                // Streams einrichten
+                out = new PrintWriter(clientSocket.getOutputStream(), true);
+                in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+                SwingUtilities.invokeLater(() -> {
+                    statusLabel.setText("Verbunden mit Server! Du bist O. Warte auf X's Zug.");
+                    connectButton.setEnabled(false);
+                    myPlayer = 'O';  // Client spielt O
+                    myTurn = false;  // X (Server) beginnt
+                    gameActive = true;
+                });
+
+                // Nachrichten vom Server empfangen
+                receiveMessages();
+
+            } catch (IOException e) {
+                SwingUtilities.invokeLater(() ->
+                        statusLabel.setText("Verbindungsfehler: " + e.getMessage()));
+            }
+        });
+    }
+
+    private void receiveMessages() {
+        try {
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                final String message = inputLine;
+                SwingUtilities.invokeLater(() -> processMessage(message));
+            }
+        } catch (IOException e) {
+            SwingUtilities.invokeLater(() -> {
+                if (isConnected) {
+                    statusLabel.setText("Verbindung unterbrochen: " + e.getMessage());
+                    resetConnectionState();
+                }
+            });
+        }
+    }
+
+    private void processMessage(String message) {
+        if (message.startsWith("MOVE:")) {
+            // Format: MOVE:row,col
+            String[] parts = message.substring(5).split(",");
+            int row = Integer.parseInt(parts[0]);
+            int col = Integer.parseInt(parts[1]);
+
+            // Zug des Gegners ausführen
+            makeMove(row, col, (myPlayer == 'X') ? 'O' : 'X');
+            myTurn = true;
+            updateStatus();
+
+        } else if (message.equals("RESET")) {
+            resetBoard();
+
+        } else if (message.startsWith("CHAT:")) {
+            // Hier könnte Chat-Funktionalität implementiert werden
+        }
+    }
+
+    private void sendMove(int row, int col) {
+        if (out != null) {
+            out.println("MOVE:" + row + "," + col);
+        }
+    }
+
+    private void sendResetCommand() {
+        if (out != null) {
+            out.println("RESET");
+        }
+    }
+
+    private void updateStatus() {
+        if (!isConnected) {
+            statusLabel.setText("Nicht verbunden.");
+            return;
+        }
+
+        if (hasWon('X')) {
+            statusLabel.setText("X hat gewonnen!");
+            gameActive = false;
+        } else if (hasWon('O')) {
+            statusLabel.setText("O hat gewonnen!");
+            gameActive = false;
+        } else if (isBoardFull()) {
+            statusLabel.setText("Unentschieden!");
+            gameActive = false;
+        } else if (myTurn) {
+            statusLabel.setText("Du bist am Zug (" + myPlayer + ")");
+        } else {
+            statusLabel.setText("Warte auf Gegner...");
+        }
+    }
+
+    private void initializeBoard(JPanel boardPanel) {
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                buttons[i][j] = new JButton("-");
+                buttons[i][j].setFont(new Font("Arial", Font.BOLD, 60));
+                buttons[i][j].setFocusPainted(false);
+
+                final int row = i;
+                final int col = j;
+                buttons[i][j].addActionListener(e -> {
+                    if (isConnected && gameActive && myTurn && buttons[row][col].getText().equals("-")) {
+                        makeMove(row, col, myPlayer);
+                        sendMove(row, col);
+                        myTurn = false;
+                        updateStatus();
+                    }
+                });
+
+                boardPanel.add(buttons[i][j]);
+            }
+        }
+    }
+
+    private void makeMove(int row, int col, char player) {
+        buttons[row][col].setText(String.valueOf(player));
+
+        // Farbe entsprechend des Spielers setzen
+        if (player == 'X') {
+            buttons[row][col].setForeground(Color.BLUE);
+        } else {
+            buttons[row][col].setForeground(Color.RED);
+        }
+
+        currentPlayer = player;
+
+        // Prüfen, ob das Spiel gewonnen wurde
+        if (hasWon(player)) {
+            highlightWinningLine(player);
+            gameActive = false;
+        }
+
+        updateStatus();
+    }
+
+    private boolean hasWon(char player) {
+        // Zeilen und Spalten prüfen
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            if ((buttons[i][0].getText().equals(String.valueOf(player)) &&
+                    buttons[i][1].getText().equals(String.valueOf(player)) &&
+                    buttons[i][2].getText().equals(String.valueOf(player))) ||
+                    (buttons[0][i].getText().equals(String.valueOf(player)) &&
+                            buttons[1][i].getText().equals(String.valueOf(player)) &&
+                            buttons[2][i].getText().equals(String.valueOf(player)))) {
+                return true;
+            }
+        }
+        // Diagonalen prüfen
+        if ((buttons[0][0].getText().equals(String.valueOf(player)) &&
+                buttons[1][1].getText().equals(String.valueOf(player)) &&
+                buttons[2][2].getText().equals(String.valueOf(player))) ||
+                (buttons[0][2].getText().equals(String.valueOf(player)) &&
+                        buttons[1][1].getText().equals(String.valueOf(player)) &&
+                        buttons[2][0].getText().equals(String.valueOf(player)))) {
+            return true;
+        }
+        return false;
+    }
+
+    private void highlightWinningLine(char player) {
+        Color winColor = (player == 'X') ? new Color(173, 216, 230) : new Color(255, 192, 203);
+
+        // Zeilen prüfen
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            if (buttons[i][0].getText().equals(String.valueOf(player)) &&
+                    buttons[i][1].getText().equals(String.valueOf(player)) &&
+                    buttons[i][2].getText().equals(String.valueOf(player))) {
+                buttons[i][0].setBackground(winColor);
+                buttons[i][1].setBackground(winColor);
+                buttons[i][2].setBackground(winColor);
+                return;
+            }
+        }
+
+        // Spalten prüfen
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            if (buttons[0][i].getText().equals(String.valueOf(player)) &&
+                    buttons[1][i].getText().equals(String.valueOf(player)) &&
+                    buttons[2][i].getText().equals(String.valueOf(player))) {
+                buttons[0][i].setBackground(winColor);
+                buttons[1][i].setBackground(winColor);
+                buttons[2][i].setBackground(winColor);
+                return;
+            }
+        }
+
+        // Diagonale links oben nach rechts unten
+        if (buttons[0][0].getText().equals(String.valueOf(player)) &&
+                buttons[1][1].getText().equals(String.valueOf(player)) &&
+                buttons[2][2].getText().equals(String.valueOf(player))) {
+            buttons[0][0].setBackground(winColor);
+            buttons[1][1].setBackground(winColor);
+            buttons[2][2].setBackground(winColor);
+            return;
+        }
+
+        // Diagonale rechts oben nach links unten
+        if (buttons[0][2].getText().equals(String.valueOf(player)) &&
+                buttons[1][1].getText().equals(String.valueOf(player)) &&
+                buttons[2][0].getText().equals(String.valueOf(player))) {
+            buttons[0][2].setBackground(winColor);
+            buttons[1][1].setBackground(winColor);
+            buttons[2][0].setBackground(winColor);
+        }
+    }
+
+    private boolean isBoardFull() {
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                if (buttons[i][j].getText().equals("-")) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private void resetBoard() {
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                buttons[i][j].setText("-");
+                buttons[i][j].setBackground(null);
+                buttons[i][j].setForeground(Color.BLACK);
+            }
+        }
+
+        currentPlayer = 'X';
+        gameActive = true;
+
+        if (isServer) {
+            myTurn = true;
+        } else {
+            myTurn = false;
+        }
+
+        updateStatus();
+    }
+
+    private void resetConnectionState() {
+        isConnected = false;
+        gameActive = false;
+        connectButton.setEnabled(true);
+        resetButton.setEnabled(false);
+
+        // Versuche, Verbindungen zu schließen
+        closeConnections();
+    }
+
+    private void closeConnections() {
+        executorService.shutdownNow();
+
+        try {
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (clientSocket != null) clientSocket.close();
+            if (serverSocket != null) serverSocket.close();
+        } catch (IOException e) {
+            System.err.println("Fehler beim Schließen der Verbindungen: " + e.getMessage());
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            Tictactoe game = new Tictactoe();
+            game.setVisible(true);
+        });
+    }
+}
