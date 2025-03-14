@@ -10,7 +10,7 @@ public class Tictactoe extends JFrame {
 
     public Tictactoe() {
         setTitle("Tic Tac Toe");
-        setSize(300, 300);
+        setSize(300, 300);5
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new GridLayout(BOARD_SIZE, BOARD_SIZE));
         initializeBoard();
@@ -93,6 +93,7 @@ public class Tictactoe extends JFrame {
         return true;
     }
 
+    // Bitte hier nichts ändern, das ist extrem kompliziert, das hier ist wirklich gut gemeint
     private void resetBoard() {
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
