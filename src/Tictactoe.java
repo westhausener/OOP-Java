@@ -10,7 +10,7 @@ public class Tictactoe extends JFrame {
 
     public Tictactoe() {
         setTitle("Tic Tac Toe");
-        setSize(300, 300);5
+        setSize(300, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new GridLayout(BOARD_SIZE, BOARD_SIZE));
         initializeBoard();

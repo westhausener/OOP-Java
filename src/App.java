@@ -14,6 +14,8 @@ public class App {
 
         System.out.println(t);
         System.out.println(s);
+        System.out.println(p);
+
 
     }
 }

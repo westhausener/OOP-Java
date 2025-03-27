@@ -2,27 +2,18 @@ package OOP3;
 
 public class Auto {
 	
-	int ps;
-	
-	public int getPs() {
-		return ps;
-	}
+	public int ps;
 
-	public void setPs(int ps) {
-		this.ps = ps;
-	}
+	public String hersteller;
 
-	public String getHersteller() {
-		return hersteller;
-	}
+	public static int anzahl;
 
-	public void setHersteller(String hersteller) {
-		this.hersteller = hersteller;
-	}
+	String k = "Hallo";
 
-	String hersteller;
-	
-	static int anzahl;
-	
+	public void fahren() {
+		s.length();
+	}
 	
 }
+
+
