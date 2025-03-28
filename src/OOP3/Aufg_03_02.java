@@ -1,8 +1,6 @@
 package OOP3;
 
 
-
-
 public class Aufg_03_02 {
 
 	public static void main(String[] args) {

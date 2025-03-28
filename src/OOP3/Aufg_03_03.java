@@ -8,7 +8,7 @@ public class Aufg_03_03 {
 		
 		sArray[0] = "Anna";
 		sArray[1] = "Petra";
-		sArray[3] = "Josephine";
+		sArray[2] = "Josephine";
 		
 		
 		System.out.println(sArray[0].charAt(0)+". ");

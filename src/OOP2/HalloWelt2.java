@@ -1,4 +1,4 @@
-package OOP2;
+
 /**
  * Beschreibung der Klasse
  * @author oliver
