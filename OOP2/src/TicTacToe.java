@@ -3,12 +3,12 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class Tictactoe extends JFrame {
+public class TicTacToe extends JFrame {
     private static final int BOARD_SIZE = 3;
     private JButton[][] buttons = new JButton[BOARD_SIZE][BOARD_SIZE];
     private char currentPlayer = 'X';
 
-    public Tictactoe() {
+    public TicTacToe() {
         setTitle("Tic Tac Toe");
         setSize(300, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -105,7 +105,7 @@ public class Tictactoe extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            Tictactoe game = new Tictactoe();
+            TicTacToe game = new TicTacToe();
             game.setVisible(true);
         });
     }
