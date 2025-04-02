@@ -7,6 +7,7 @@ public class Film3 {
         this.titel = titel;
         this.figur = figur;
         this.jahr = jahr;
+        
     }
 
     public Film3() {
