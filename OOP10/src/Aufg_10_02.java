@@ -28,8 +28,12 @@ public class Aufg_10_02{
 
 			
 
-					datum = pruefeDatum (testDatum);
-					System.out.println ("Eingegebenes Datum ist ok:\n" + datum);
+					try {
+						datum = pruefeDatum (testDatum);
+						System.out.println ("Eingegebenes Datum ist ok:\n" + datum);
+					} catch (ParseException e) {
+						System.out.println("Fehler: Ungültiges Datum eingegeben.");
+					}
 				
 				
 				

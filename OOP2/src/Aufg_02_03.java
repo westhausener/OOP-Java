@@ -12,6 +12,7 @@ public class Aufg_02_03 {
         System.out.println("Bildschirmtext");
         // Semikolon vergessen -> Fehler wird angezeigt
         System.out.println(zahl);
+		System.out.println(flaeche);
         System.out.println("Toll, oder?");
 
 	}
