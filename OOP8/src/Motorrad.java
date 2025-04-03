@@ -17,4 +17,9 @@ class Motorrad extends Fahrzeug{
       super.print();
       System.out.println("Spaßfaktor: "+spassFaktor);
    }
+
+   public void losfahren(){
+         System.out.println("Das Motorrad fährt los!");
+   }
+
 }

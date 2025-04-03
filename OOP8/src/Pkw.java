@@ -16,6 +16,11 @@ class Pkw extends Fahrzeug{
    public void print(){
 	   
       super.print();
+
       System.out.println("Modellbezeichnung: "+modellBezeichnung);
+   }
+
+   public void losfahren(){
+         System.out.println("Der PKW fährt los und schaltet das Radio dabei an!");
    }
 }

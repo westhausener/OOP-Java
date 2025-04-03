@@ -1,6 +1,6 @@
 // Datei: Fahrzeug.java
 
-class Fahrzeug{
+public abstract class Fahrzeug{
 	
    private double preis;
    private String herstellerName;
@@ -25,4 +25,8 @@ class Fahrzeug{
       System.out.println("Preis            : " + preis);
       System.out.println("Farbe   : " + farbe);
    }
+
+   public abstract void losfahren();
+
+   
 }

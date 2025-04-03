@@ -1,4 +1,7 @@
 class AssaultRifle extends Weapon {
+
+    
+
     public AssaultRifle() {
         super("Assault Rifle", 30, 30);
     }
