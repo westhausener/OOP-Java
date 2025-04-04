@@ -5,7 +5,7 @@ public class Aufg_10_01 {
 	public static void main(String[] args) {
 
 		int zaehler = 4;
-		int nenner = 1;
+		int nenner = 2;
 		JFrame f = null;
 		
 		try{
@@ -14,8 +14,19 @@ public class Aufg_10_01 {
 			
 			f.dispose();
 		
-		}catch(Exception e){
-			System.err.println("Fehler: "+e.getMessage());
+		}
+
+		catch(ArithmeticException e){
+			System.out.println("Fehler: Division durch 0!");
+		}
+		catch(Exception e){
+			System.out.println("Fehler: "+e.getMessage());
+		}
+		
+
+		
+		finally {
+			System.out.println("Ende des Programms.");
 		}
 		
 	}

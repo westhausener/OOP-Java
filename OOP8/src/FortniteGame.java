@@ -4,9 +4,9 @@ public class FortniteGame {
         AssaultRifle af1 = new AssaultRifle();
         Weapon weapon2 = new Weapon("AR-15", 15, 190);
 
-        //AssaultRifle af2 = (AssaultRifle) weapon2;
+        AssaultRifle af2 = (AssaultRifle) weapon2;
 
-        //System.out.println(af2.name); // Ausgabe: 0.0, weil SniperRifle keine speedOfFire hat
+        System.out.println(af2.name); // Ausgabe: 0.0, weil SniperRifle keine speedOfFire hat
 
         Weapon w1 = af1;
 

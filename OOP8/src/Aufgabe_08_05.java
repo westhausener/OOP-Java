@@ -26,6 +26,9 @@ public class Aufgabe_08_05 {
 		switch(t.getClass().getName()){
 		case "Zebra": 
 			System.out.println("Anzahl Streifen: "+((Zebra) t).getAnzahlStreifen());
+			break;
+		case "Tiger":
+			System.out.println("Tiger ist ein Raubtier");
 		break;
 		}
 	}
