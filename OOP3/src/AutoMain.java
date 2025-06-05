@@ -21,6 +21,7 @@ public class AutoMain {
 		System.out.println("Hersteller: "+a2.hersteller);
 		System.out.println("PS: "+a2.ps);
 		System.out.println("Anzahl: "+Auto.anzahl);
+		System.out.println("Klasse: "+a1.getClass());
 		
 	}
 

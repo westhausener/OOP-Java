@@ -18,6 +18,9 @@ public class Aufgabe_08_05 {
 		// Ausgabe von Name und Gewicht
 		System.out.println("Name: "+t.getName());
 		System.out.println("Gewicht: "+t.getGewicht());
+
+		System.out.println("Klasse: "+t.getClass());
+		System.out.println("Superklasse: "+t.getClass().getName());
 		/*if(t instanceof Zebra){
 			
 			Zebra z = (Zebra) t;

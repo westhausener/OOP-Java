@@ -19,10 +19,11 @@ public class Aufg_10_02{
 		return d;
 	}
 
+
 	public static void main (String[] args) {
 
 		
-			String testDatum = "24.12.2011"; 
+			String testDatum = "24.13.2011"; 
 
 			Date datum = null;
 
@@ -31,16 +32,13 @@ public class Aufg_10_02{
 					try {
 						datum = pruefeDatum (testDatum);
 						System.out.println ("Eingegebenes Datum ist ok:\n" + datum);
-					} catch (ParseException e) {
-						System.out.println("Fehler: Ungültiges Datum eingegeben.");
+					} 
+					//
+					catch (ParseException e) {
+					//
+					
+					System.out.println("Fehler: Ungültiges Datum eingegeben.");
 					}
-				
-				
-				
-		
-
-			
-
 		
 
 
