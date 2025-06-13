@@ -94,7 +94,7 @@ public class HochzeitsApp extends Frame {
             System.out.println("Grußtext: " + gruss);
         });
 
-
+        
         setVisible(true);
     }
 
